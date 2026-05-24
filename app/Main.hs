@@ -2,6 +2,7 @@
 {-# LANGUAGE TypeOperators #-}
 module Main where
 
+import Control.Monad.IO.Class (liftIO)
 import Data.String (fromString)
 import Data.ByteString.Char8 (pack)
 import Network.Wai.Handler.Warp (runSettings, setPort, defaultSettings)
@@ -10,6 +11,7 @@ import Network.Wai.Middleware.Cors
 import Servant
 import Server.Routes
 import Api.Model
+import DB.Database
 
 -- Handlers da API
 server :: Server SaudeAPI
@@ -21,22 +23,37 @@ server = listarUsuarios
     :<|> listarAlertas
 
 listarUsuarios :: Handler [Usuario]
-listarUsuarios = return []
+listarUsuarios = do
+  conn <- liftIO conectar
+  liftIO $ listarTodosUsuarios conn
 
 criarUsuario :: Usuario -> Handler Usuario
-criarUsuario u = return u
+criarUsuario u = do
+  conn <- liftIO conectar
+  liftIO $ inserirUsuario conn u
 
 buscarUsuario :: Int -> Handler Usuario
-buscarUsuario _ = throwError err404
+buscarUsuario uid = do
+  conn <- liftIO conectar
+  result <- liftIO $ buscarUsuarioPorId conn uid
+  case result of
+    Just u  -> return u
+    Nothing -> throwError err404
 
 listarMetricas :: Int -> Handler [Metrica]
-listarMetricas _ = return []
+listarMetricas uid = do
+  conn <- liftIO conectar
+  liftIO $ listarMetricasDoUsuario conn uid
 
 criarMetrica :: Int -> Metrica -> Handler Metrica
-criarMetrica _ m = return m
+criarMetrica _ m = do
+  conn <- liftIO conectar
+  liftIO $ inserirMetrica conn m
 
 listarAlertas :: Int -> Handler [Alerta]
-listarAlertas _ = return []
+listarAlertas uid = do
+  conn <- liftIO conectar
+  liftIO $ listarAlertasDoUsuario conn uid
 
 -- Configuração do CORS
 corsPolicy :: Middleware
