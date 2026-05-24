@@ -71,7 +71,19 @@ library
     -- other-extensions:
 
     -- Other library packages from which modules are imported.
-    build-depends:    base ^>=4.18.3.0
+    build-depends:
+        base ^>=4.18.3.0,
+        servant,
+        servant-server,
+        warp,
+        aeson,
+        wai,
+        wai-cors,
+        postgresql-simple,
+        bytestring,
+        mtl,
+        text,
+        time
 
     -- Directories containing source files.
     hs-source-dirs:   src
@@ -87,7 +99,9 @@ executable saudetracker
     main-is:          Main.hs
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules:
+        Api.Model
+        Server.Routes
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -95,10 +109,22 @@ executable saudetracker
     -- Other library packages from which modules are imported.
     build-depends:
         base ^>=4.18.3.0,
-        saudetracker
+        saudetracker,
+        servant,
+        servant-server,
+        warp,
+        aeson,
+        wai,
+        wai-cors,
+        bytestring,
+        mtl,
+        text,
+        time
 
     -- Directories containing source files.
     hs-source-dirs:   app
 
     -- Base language which the package is written in.
     default-language: Haskell2010
+
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
