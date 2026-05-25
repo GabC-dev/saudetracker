@@ -12,6 +12,7 @@ import Servant
 import Server.Routes
 import Api.Model
 import DB.Database
+import Api.Regras
 
 -- Handlers da API
 server :: Server SaudeAPI
@@ -48,7 +49,15 @@ listarMetricas uid = do
 criarMetrica :: Int -> Metrica -> Handler Metrica
 criarMetrica _ m = do
   conn <- liftIO conectar
-  liftIO $ inserirMetrica conn m
+  metricaSalva <- liftIO $ inserirMetrica conn m
+  let alertas = gerarAlertas metricaSalva
+  liftIO $ putStrLn $ "Alertas gerados: " ++ show alertas
+  liftIO $ mapM_ (\msg -> do
+    putStrLn $ "Salvando alerta: " ++ msg
+    inserirAlerta conn (metricaUsuarioId metricaSalva) msg
+    putStrLn "Alerta salvo!"
+    ) alertas
+  return metricaSalva
 
 listarAlertas :: Int -> Handler [Alerta]
 listarAlertas uid = do

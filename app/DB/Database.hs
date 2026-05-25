@@ -57,7 +57,7 @@ listarMetricasDoUsuario conn uid = do
 listarAlertasDoUsuario :: Connection -> Int -> IO [Alerta]
 listarAlertasDoUsuario conn uid = do
   rows <- query conn
-    "SELECT id, usuario_id, mensagem, gerado_em FROM alertas WHERE usuario_id = ?"
+    "SELECT id, usuario_id, mensagem, gerado_em::timestamptz FROM alertas WHERE usuario_id = ?"
     (Only uid)
   return $ map (\(i, u, m, g) -> Alerta i u m g) rows
 
@@ -65,5 +65,5 @@ inserirAlerta :: Connection -> Int -> String -> IO ()
 inserirAlerta conn uid msg = do
   _ <- execute conn
     "INSERT INTO alertas (usuario_id, mensagem) VALUES (?, ?)"
-    (uid, msg)
+    (uid :: Int, msg :: String)
   return ()
