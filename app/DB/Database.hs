@@ -4,12 +4,22 @@ module DB.Database where
 import Database.PostgreSQL.Simple
 import Api.Model
 
--- Conecta ao banco de dados
-conectar :: IO Connection
+-- Conecta ao banco de dados GABRIEL 
+{-- :: IO Connection
 conectar = connect defaultConnectInfo
   { connectDatabase = "saudetracker"
   , connectUser     = "gabriel_correa"
   , connectPassword = ""
+  , connectHost     = "localhost"
+  }
+  --}
+
+-- Conecta ao banco de dados GRAZI
+conectar :: IO Connection
+conectar = connect defaultConnectInfo
+  { connectDatabase = "saudetracker"
+  , connectUser     = "postgres"
+  , connectPassword = "1234"
   , connectHost     = "localhost"
   }
 
@@ -36,6 +46,23 @@ buscarUsuarioPorId conn uid = do
     [(i, n, id_, a, e)] -> return $ Just (Usuario i n id_ a e)
     _                   -> return Nothing
 
+atualizarUsuario :: Connection -> Int -> Usuario -> IO Usuario
+atualizarUsuario conn uid u = do
+  _ <- execute conn
+    "UPDATE usuarios SET nome = ?, idade = ?, altura = ?, email = ? WHERE id = ?"
+    (nome u, idade u, altura u, email u, uid)
+
+  return u { usuarioId = uid }
+
+deletarUsuario :: Connection -> Int -> IO ()
+deletarUsuario conn uid = do
+  _ <- execute conn
+    "DELETE FROM usuarios WHERE id = ?"
+    (Only uid)
+
+  return ()
+
+
 -- METRICAS
 
 inserirMetrica :: Connection -> Metrica -> IO Metrica
@@ -52,6 +79,22 @@ listarMetricasDoUsuario conn uid = do
     (Only uid)
   return $ map (\(i, u, t, v1, v2, r) -> Metrica i u t v1 v2 r) rows
 
+atualizarMetrica :: Connection -> Int -> Metrica -> IO Metrica
+atualizarMetrica conn mid m = do
+  _ <- execute conn
+    "UPDATE metricas SET tipo = ?, valor1 = ?, valor2 = ? WHERE id = ?"
+    (tipo m, valor1 m, valor2 m, mid)
+
+  return m { metricaId = mid }
+
+deletarMetrica :: Connection -> Int -> IO ()
+deletarMetrica conn mid = do
+  _ <- execute conn
+    "DELETE FROM metricas WHERE id = ?"
+    (Only mid)
+
+  return ()
+
 -- ALERTAS
 
 listarAlertasDoUsuario :: Connection -> Int -> IO [Alerta]
@@ -67,3 +110,14 @@ inserirAlerta conn uid msg = do
     "INSERT INTO alertas (usuario_id, mensagem) VALUES (?, ?)"
     (uid :: Int, msg :: String)
   return ()
+
+deletarAlerta :: Connection -> Int -> IO ()
+deletarAlerta conn aid = do
+  _ <- execute conn
+    "DELETE FROM alertas WHERE id = ?"
+    (Only aid)
+
+  return ()
+
+
+

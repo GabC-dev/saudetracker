@@ -19,9 +19,14 @@ server :: Server SaudeAPI
 server = listarUsuarios
     :<|> criarUsuario
     :<|> buscarUsuario
+    :<|> handlerAtualizarUsuario
+    :<|> handlerDeletarUsuario
     :<|> listarMetricas
     :<|> criarMetrica
+    :<|> handlerAtualizarMetrica
+    :<|> handlerDeletarMetrica
     :<|> listarAlertas
+    :<|> handlerDeletarAlerta
 
 listarUsuarios :: Handler [Usuario]
 listarUsuarios = do
@@ -41,6 +46,18 @@ buscarUsuario uid = do
     Just u  -> return u
     Nothing -> throwError err404
 
+handlerAtualizarUsuario :: Int -> Usuario -> Handler Usuario
+handlerAtualizarUsuario uid u = do
+  conn <- liftIO conectar
+  liftIO $ atualizarUsuario conn uid u
+
+handlerDeletarUsuario :: Int -> Handler NoContent
+handlerDeletarUsuario uid = do
+  conn <- liftIO conectar
+  liftIO $ deletarUsuario conn uid
+  return NoContent
+
+
 listarMetricas :: Int -> Handler [Metrica]
 listarMetricas uid = do
   conn <- liftIO conectar
@@ -59,10 +76,27 @@ criarMetrica _ m = do
     ) alertas
   return metricaSalva
 
+handlerAtualizarMetrica :: Int -> Metrica -> Handler Metrica
+handlerAtualizarMetrica mid m = do
+  conn <- liftIO conectar
+  liftIO $ atualizarMetrica conn mid m
+
+handlerDeletarMetrica :: Int -> Handler NoContent
+handlerDeletarMetrica mid = do
+  conn <- liftIO conectar
+  liftIO $ deletarMetrica conn mid
+  return NoContent
+
 listarAlertas :: Int -> Handler [Alerta]
 listarAlertas uid = do
   conn <- liftIO conectar
   liftIO $ listarAlertasDoUsuario conn uid
+
+handlerDeletarAlerta :: Int -> Handler NoContent
+handlerDeletarAlerta aid = do
+  conn <- liftIO conectar
+  liftIO $ deletarAlerta conn aid
+  return NoContent
 
 -- Configuração do CORS
 corsPolicy :: Middleware
@@ -72,9 +106,25 @@ corsPolicy = cors $ const $ Just simpleCorsResourcePolicy
   , corsOrigins        = Nothing
   }
 
+
 -- Sobe o servidor na porta 8080
 main :: IO ()
 main = do
   putStrLn "Servidor rodando em http://localhost:8080"
   let settings = setPort 8080 defaultSettings
   runSettings settings $ corsPolicy $ serve saudeAPI server
+
+  
+{--main :: IO ()
+main = do
+  putStrLn "Servidor rodando em http://localhost:8080"
+
+  let settings =
+        setHost HostAny $
+        setPort 8080 $
+        defaultSettings
+
+  let app = corsPolicy (serve saudeAPI server)
+
+  runSettings settings app--}
+  
