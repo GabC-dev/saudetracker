@@ -1,4 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import './styles/global.css' // ADICIONEI DO CLAUDE
+import { Routes, Route } from "react-router-dom"; // ADD DO CLAUDE
+
 
 import Dashboard from "./pages/Dashboard";
 import Cadastro from "./pages/Cadastro";

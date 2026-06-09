@@ -1,27 +1,14 @@
-import API_URL from "./api";
+const BASE = "http://localhost:8080"
 
-export async function listarUsuarios() {
-  const response = await fetch(`${API_URL}/usuarios`);
+export const listarUsuarios = () =>
+  fetch(`${BASE}/usuarios`).then(r => r.json())
 
-  if (!response.ok) {
-    throw new Error("Erro ao buscar usuários");
-  }
+export const buscarUsuario = (id) =>
+  fetch(`${BASE}/usuarios/${id}`).then(r => r.json())
 
-  return await response.json();
-}
-
-export async function criarUsuario(usuario) {
-  const response = await fetch(`${API_URL}/usuarios`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(usuario),
-  });
-
-  if (!response.ok) {
-    throw new Error("Erro ao criar usuário");
-  }
-
-  return await response.json();
-}
+export const criarUsuario = (usuario) =>
+  fetch(`${BASE}/usuarios`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(usuario)
+  }).then(r => r.json())
