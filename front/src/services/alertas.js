@@ -11,3 +11,16 @@ export async function listarAlertas(idUsuario) {
 
   return await response.json();
 }
+
+export async function deletarAlerta(idAlerta) {
+  const response = await fetch(
+    `${API_URL}/alertas/${idAlerta}`,
+    {
+      method: "DELETE"
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Erro ao excluir alerta");
+  }
+}

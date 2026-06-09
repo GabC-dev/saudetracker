@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listarUsuarios } from '../services/usuarios'
-import { listarAlertas } from '../services/alertas'
+import { listarAlertas, deletarAlerta } from '../services/alertas'
 
 function severidade(msg) {
   const m = msg.toLowerCase()
@@ -25,7 +25,7 @@ function getIniciais(nome) {
   return nome.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 }
 
-function PainelAlertas({ usuario, alertas }) {
+function PainelAlertas({ usuario, alertas, onDelete }) {
   const [filtro, setFiltro] = useState('Todos')
 
   const graves = alertas.filter(a => severidade(a.mensagem) === 'danger')
@@ -120,9 +120,26 @@ function PainelAlertas({ usuario, alertas }) {
                     {formatarData(a.geradoEm)}
                   </p>
                 </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span className={`badge badge-${isDanger ? 'danger' : 'warn'}`}>
                   {isDanger ? 'Grave' : 'Aviso'}
                 </span>
+
+                <button
+                onClick={() => onDelete(a.alertaId)}
+                style={{
+                border: 'none',
+                borderRadius: 6,
+                padding: '4px 8px',
+                cursor: 'pointer',
+                background: '#ef4444',
+                color: '#fff',
+                fontSize: 12
+              }}
+  >
+    Excluir
+  </button>
+</div>
               </div>
             )
           })}
@@ -136,6 +153,24 @@ export default function Alertas() {
   const [dados, setDados]                   = useState([]) // [{ usuario, alertas }]
   const [aberto, setAberto]                 = useState(null)
   const [loading, setLoading]               = useState(true)
+
+  const removerAlerta = async (alertaId) => {
+    try {
+      await deletarAlerta(alertaId)
+
+      setDados(dados =>
+        dados.map(item => ({
+          ...item,
+          alertas: item.alertas.filter(
+            a => a.alertaId !== alertaId
+          )
+        }))
+      )
+    } catch (err) {
+      alert("Erro ao excluir alerta")
+      console.error(err)
+    }
+  }
 
   useEffect(() => {
     listarUsuarios().then(async (users) => {
@@ -256,7 +291,11 @@ export default function Alertas() {
 
                 {/* Painel expansível */}
                 {estaAberto && (
-                  <PainelAlertas usuario={usuario} alertas={alertas} />
+                  <PainelAlertas
+                    usuario={usuario}
+                    alertas={alertas}
+                    onDelete={removerAlerta}
+                  />
                 )}
               </div>
             )

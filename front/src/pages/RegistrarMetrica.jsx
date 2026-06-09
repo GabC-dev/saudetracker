@@ -92,10 +92,9 @@ export default function RegistrarMetrica() {
         valor2: v2,
         registradoEm: new Date().toISOString(),
       })
-      setSucesso(true)
-      setValor1('')
-      setValor2('')
-      setTimeout(() => navigate('/historico'), 1500)
+        setSucesso(true)
+        setValor1('')
+        setValor2('')
     } catch {
       setErro('Erro ao salvar. Verifique se o servidor está rodando.')
     } finally {
@@ -270,7 +269,7 @@ export default function RegistrarMetrica() {
                 borderRadius: 8, padding: '10px 14px',
                 fontSize: 13, fontWeight: 500, marginBottom: '1rem'
               }}>
-                ✅ Métrica salva! Redirecionando...
+                ✅ Métrica salva com sucesso!
               </div>
             )}
 

@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { listarUsuarios } from '../services/usuarios'
+import {
+  listarUsuarios,
+  deletarUsuario,
+  atualizarUsuario
+} from '../services/usuarios'
 import { listarMetricas } from '../services/metricas'
 import { listarAlertas } from '../services/alertas'
 
@@ -311,6 +315,72 @@ export default function Dashboard() {
       setUsuarioSelecionado(u)
     }
   }
+  const handleExcluirUsuario = async (id) => {
+  const confirmar = window.confirm(
+    "Deseja realmente excluir este usuário?"
+  )
+
+  if (!confirmar) return
+
+  try {
+    await deletarUsuario(id)
+
+    setUsuarios(usuarios =>
+      usuarios.filter(u => u.usuarioId !== id)
+    )
+
+    if (usuarioSelecionado?.usuarioId === id) {
+      setUsuarioSelecionado(null)
+    }
+  } catch (err) {
+    alert("Erro ao excluir usuário")
+    console.error(err)
+  }
+}
+  const handleEditarUsuario = async (usuario) => {
+  const nome = prompt("Nome:", usuario.nome)
+  if (nome === null) return
+
+  const idade = prompt("Idade:", usuario.idade)
+  if (idade === null) return
+
+  const altura = prompt("Altura:", usuario.altura)
+  if (altura === null) return
+
+  const email = prompt("E-mail:", usuario.email)
+  if (email === null) return
+
+  try {
+    const atualizado = await atualizarUsuario(
+      usuario.usuarioId,
+      {
+        usuarioId: usuario.usuarioId,
+        nome,
+        idade: parseInt(idade),
+        altura: parseFloat(altura),
+        email
+      }
+    )
+
+    setUsuarios(usuarios =>
+      usuarios.map(u =>
+        u.usuarioId === usuario.usuarioId
+          ? atualizado
+          : u
+      )
+    )
+
+    if (
+      usuarioSelecionado?.usuarioId === usuario.usuarioId
+    ) {
+      setUsuarioSelecionado(atualizado)
+    }
+
+  } catch (err) {
+    alert("Erro ao editar usuário")
+    console.error(err)
+  }
+}
 
   if (loading) {
     return (
@@ -386,6 +456,41 @@ export default function Dashboard() {
                       {u.idade} anos · {u.altura}m · {u.email}
                     </p>
                   </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleEditarUsuario(u)
+                      }}
+                      style={{
+                        border: 'none',
+                        borderRadius: 6,
+                        padding: '6px 10px',
+                        cursor: 'pointer',
+                        background: '#2563eb',
+                        color: '#fff',
+                        fontSize: 12
+                      }}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleExcluirUsuario(u.usuarioId)
+                      }}
+                    style={{
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '6px 10px',
+                    cursor: 'pointer',
+                    background: '#ef4444',
+                    color: '#fff',
+                    fontSize: 12
+                  }}
+                >
+                    Excluir
+                    </button>
+
                   <span style={{
                     fontSize: 12, color: selecionado ? 'var(--green-dark)' : 'var(--text-muted)',
                     fontWeight: 500,
