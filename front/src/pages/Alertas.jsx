@@ -25,8 +25,75 @@ function getIniciais(nome) {
   return nome.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 }
 
+// ─── Modal de Confirmação de Exclusão de Alerta ───────────────────────────────
+function ModalConfirmarAlerta({ alerta, onConfirmar, onFechar }) {
+  const [excluindo, setExcluindo] = useState(false)
+
+  const handleConfirmar = async () => {
+    setExcluindo(true)
+    await onConfirmar(alerta.alertaId)
+    setExcluindo(false)
+  }
+
+  const isDanger = severidade(alerta.mensagem) === 'danger'
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 999,
+      background: 'rgba(0,0,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'fadeIn 0.15s ease',
+    }}>
+      <div style={{
+        background: 'var(--surface)',
+        borderRadius: 16,
+        padding: '2rem',
+        width: '100%',
+        maxWidth: 380,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+        textAlign: 'center',
+        animation: 'slideUp 0.2s ease',
+      }}>
+        <div style={{ fontSize: 40, marginBottom: '1rem' }}>
+          {isDanger ? '🔴' : '⚠️'}
+        </div>
+        <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Excluir alerta?</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>
+          Você está prestes a excluir o seguinte alerta:
+        </p>
+        <div style={{
+          background: isDanger ? 'var(--danger-bg)' : 'var(--warn-bg)',
+          borderRadius: 8, padding: '10px 14px', marginBottom: '1.5rem',
+          fontSize: 13, fontWeight: 600,
+          color: isDanger ? 'var(--danger-text)' : 'var(--warn-text)',
+        }}>
+          {alerta.mensagem}
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onFechar} style={{
+            flex: 1, padding: '10px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+            border: '1.5px solid var(--border)', background: 'var(--bg)',
+            color: 'var(--text)', cursor: 'pointer',
+          }}>
+            Cancelar
+          </button>
+          <button onClick={handleConfirmar} disabled={excluindo} style={{
+            flex: 1, padding: '10px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+            border: 'none', background: '#ef4444', color: '#fff',
+            cursor: excluindo ? 'not-allowed' : 'pointer', opacity: excluindo ? 0.7 : 1,
+          }}>
+            {excluindo ? 'Excluindo...' : 'Sim, excluir'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Painel de Alertas do Usuário ─────────────────────────────────────────────
 function PainelAlertas({ usuario, alertas, onDelete }) {
-  const [filtro, setFiltro] = useState('Todos')
+  const [filtro, setFiltro]           = useState('Todos')
+  const [modalAlerta, setModalAlerta] = useState(null)
 
   const graves = alertas.filter(a => severidade(a.mensagem) === 'danger')
   const avisos = alertas.filter(a => severidade(a.mensagem) === 'warn')
@@ -35,12 +102,26 @@ function PainelAlertas({ usuario, alertas, onDelete }) {
                   : filtro === 'Avisos' ? avisos
                   : alertas
 
+  const handleConfirmarExclusao = async (alertaId) => {
+    await onDelete(alertaId)
+    setModalAlerta(null)
+  }
+
   return (
     <div style={{
       marginTop: 8,
       borderTop: '1px solid var(--border)',
       paddingTop: '1rem',
+      animation: 'slideUp 0.2s ease',
     }}>
+
+      {modalAlerta && (
+        <ModalConfirmarAlerta
+          alerta={modalAlerta}
+          onConfirmar={handleConfirmarExclusao}
+          onFechar={() => setModalAlerta(null)}
+        />
+      )}
 
       {/* Resumo */}
       <div style={{ display: 'flex', gap: 8, marginBottom: '1rem' }}>
@@ -103,6 +184,7 @@ function PainelAlertas({ usuario, alertas, onDelete }) {
                   display: 'flex', alignItems: 'flex-start', gap: 12,
                   padding: '10px 0',
                   borderBottom: i < filtrados.length - 1 ? '1px solid var(--border)' : 'none',
+                  transition: 'opacity 0.2s',
                 }}
               >
                 <div style={{
@@ -121,25 +203,22 @@ function PainelAlertas({ usuario, alertas, onDelete }) {
                   </p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span className={`badge badge-${isDanger ? 'danger' : 'warn'}`}>
-                  {isDanger ? 'Grave' : 'Aviso'}
-                </span>
-
-                <button
-                onClick={() => onDelete(a.alertaId)}
-                style={{
-                border: 'none',
-                borderRadius: 6,
-                padding: '4px 8px',
-                cursor: 'pointer',
-                background: '#ef4444',
-                color: '#fff',
-                fontSize: 12
-              }}
-  >
-    Excluir
-  </button>
-</div>
+                  <span className={`badge badge-${isDanger ? 'danger' : 'warn'}`}>
+                    {isDanger ? 'Grave' : 'Aviso'}
+                  </span>
+                  <button
+                    onClick={() => setModalAlerta(a)}
+                    style={{
+                      border: 'none', borderRadius: 6, padding: '4px 10px',
+                      cursor: 'pointer', background: '#ef4444', color: '#fff',
+                      fontSize: 12, fontWeight: 600, transition: 'opacity 0.15s',
+                    }}
+                    onMouseOver={e => e.target.style.opacity = '0.85'}
+                    onMouseOut={e => e.target.style.opacity = '1'}
+                  >
+                    Excluir
+                  </button>
+                </div>
               </div>
             )
           })}
@@ -149,25 +228,22 @@ function PainelAlertas({ usuario, alertas, onDelete }) {
   )
 }
 
+// ─── Página Principal de Alertas ──────────────────────────────────────────────
 export default function Alertas() {
-  const [dados, setDados]                   = useState([]) // [{ usuario, alertas }]
-  const [aberto, setAberto]                 = useState(null)
-  const [loading, setLoading]               = useState(true)
+  const [dados, setDados]   = useState([])
+  const [aberto, setAberto] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   const removerAlerta = async (alertaId) => {
     try {
       await deletarAlerta(alertaId)
-
       setDados(dados =>
         dados.map(item => ({
           ...item,
-          alertas: item.alertas.filter(
-            a => a.alertaId !== alertaId
-          )
+          alertas: item.alertas.filter(a => a.alertaId !== alertaId)
         }))
       )
     } catch (err) {
-      alert("Erro ao excluir alerta")
       console.error(err)
     }
   }
@@ -182,7 +258,6 @@ export default function Alertas() {
           ),
         }))
       )
-      // ordena: usuários com alertas primeiro, depois por quantidade
       resultado.sort((a, b) => b.alertas.length - a.alertas.length)
       setDados(resultado)
     }).finally(() => setLoading(false))
@@ -244,6 +319,7 @@ export default function Alertas() {
                 style={{
                   borderLeft: `3px solid ${semAlertas ? 'var(--green)' : graves > 0 ? '#ef4444' : '#f59e0b'}`,
                   padding: '1rem 1.25rem',
+                  transition: 'all 0.2s ease',
                 }}
               >
                 {/* Header do usuário */}

@@ -94,7 +94,7 @@ export default function Cadastro() {
               name="nome"
               value={form.nome}
               onChange={handleChange}
-              placeholder="Ex: Gabriel Correa"
+              placeholder="Ex: Danilo Saraiva"
               required
             />
           </div>
@@ -136,7 +136,7 @@ export default function Cadastro() {
               name="email"
               value={form.email}
               onChange={handleChange}
-              placeholder="Ex: gabriel@email.com"
+              placeholder="Ex: seuemail@email.com"
               required
             />
           </div>

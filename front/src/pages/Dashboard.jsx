@@ -84,6 +84,173 @@ function getIniciais(nome) {
   return nome.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 }
 
+// ─── Modal de Edição ──────────────────────────────────────────────────────────
+function ModalEditar({ usuario, onSalvar, onFechar }) {
+  const [form, setForm] = useState({
+    nome:   usuario.nome,
+    idade:  usuario.idade,
+    altura: usuario.altura,
+    email:  usuario.email,
+  })
+  const [salvando, setSalvando] = useState(false)
+
+  const handleChange = (e) => {
+    setForm(f => ({ ...f, [e.target.name]: e.target.value }))
+  }
+
+  const handleSubmit = async () => {
+    setSalvando(true)
+    await onSalvar({
+      usuarioId: usuario.usuarioId,
+      nome:   form.nome,
+      idade:  parseInt(form.idade),
+      altura: parseFloat(form.altura),
+      email:  form.email,
+    })
+    setSalvando(false)
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 999,
+      background: 'rgba(0,0,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'fadeIn 0.15s ease',
+    }}>
+      <div style={{
+        background: 'var(--surface)',
+        borderRadius: 16,
+        padding: '2rem',
+        width: '100%',
+        maxWidth: 420,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+        animation: 'slideUp 0.2s ease',
+      }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="navbar-avatar" style={{ width: 38, height: 38, fontSize: 13 }}>
+              {getIniciais(usuario.nome)}
+            </div>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 15 }}>Editar usuário</p>
+              <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>{usuario.email}</p>
+            </div>
+          </div>
+          <button onClick={onFechar} style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            fontSize: 20, color: 'var(--text-muted)', lineHeight: 1,
+          }}>✕</button>
+        </div>
+
+        {/* Campos */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {[
+            { label: 'Nome',   name: 'nome',   type: 'text',   placeholder: 'Nome completo' },
+            { label: 'Idade',  name: 'idade',  type: 'number', placeholder: 'Ex: 22' },
+            { label: 'Altura (m)', name: 'altura', type: 'number', placeholder: 'Ex: 1.75', step: '0.01' },
+            { label: 'E-mail', name: 'email',  type: 'email',  placeholder: 'email@exemplo.com' },
+          ].map(({ label, name, type, placeholder, step }) => (
+            <div key={name}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>
+                {label}
+              </label>
+              <input
+                name={name}
+                type={type}
+                step={step}
+                value={form[name]}
+                onChange={handleChange}
+                placeholder={placeholder}
+                style={{
+                  width: '100%', padding: '9px 12px', borderRadius: 8, fontSize: 14,
+                  border: '1.5px solid var(--border)', background: 'var(--bg)',
+                  color: 'var(--text)', outline: 'none', boxSizing: 'border-box',
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={e => e.target.style.borderColor = 'var(--green)'}
+                onBlur={e => e.target.style.borderColor = 'var(--border)'}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Botões */}
+        <div style={{ display: 'flex', gap: 10, marginTop: '1.5rem' }}>
+          <button onClick={onFechar} style={{
+            flex: 1, padding: '10px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+            border: '1.5px solid var(--border)', background: 'var(--bg)',
+            color: 'var(--text)', cursor: 'pointer',
+          }}>
+            Cancelar
+          </button>
+          <button onClick={handleSubmit} disabled={salvando} style={{
+            flex: 1, padding: '10px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+            border: 'none', background: 'var(--green)', color: '#fff',
+            cursor: salvando ? 'not-allowed' : 'pointer', opacity: salvando ? 0.7 : 1,
+          }}>
+            {salvando ? 'Salvando...' : 'Salvar alterações'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modal de Confirmação de Exclusão ─────────────────────────────────────────
+function ModalConfirmar({ usuario, onConfirmar, onFechar }) {
+  const [excluindo, setExcluindo] = useState(false)
+
+  const handleConfirmar = async () => {
+    setExcluindo(true)
+    await onConfirmar()
+    setExcluindo(false)
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 999,
+      background: 'rgba(0,0,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      animation: 'fadeIn 0.15s ease',
+    }}>
+      <div style={{
+        background: 'var(--surface)',
+        borderRadius: 16,
+        padding: '2rem',
+        width: '100%',
+        maxWidth: 380,
+        boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+        textAlign: 'center',
+        animation: 'slideUp 0.2s ease',
+      }}>
+        <div style={{ fontSize: 40, marginBottom: '1rem' }}>🗑️</div>
+        <p style={{ fontWeight: 700, fontSize: 16, marginBottom: 8 }}>Excluir usuário?</p>
+        <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+          Você está prestes a excluir <strong>{usuario.nome}</strong> e todos os seus dados. Essa ação não pode ser desfeita.
+        </p>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button onClick={onFechar} style={{
+            flex: 1, padding: '10px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+            border: '1.5px solid var(--border)', background: 'var(--bg)',
+            color: 'var(--text)', cursor: 'pointer',
+          }}>
+            Cancelar
+          </button>
+          <button onClick={handleConfirmar} disabled={excluindo} style={{
+            flex: 1, padding: '10px', borderRadius: 8, fontSize: 14, fontWeight: 600,
+            border: 'none', background: '#ef4444', color: '#fff',
+            cursor: excluindo ? 'not-allowed' : 'pointer', opacity: excluindo ? 0.7 : 1,
+          }}>
+            {excluindo ? 'Excluindo...' : 'Sim, excluir'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Painel do Usuário ────────────────────────────────────────────────────────
 function PainelUsuario({ usuario, onFechar, navigate }) {
   const [metricas, setMetricas] = useState([])
   const [alertas, setAlertas]   = useState([])
@@ -126,9 +293,8 @@ function PainelUsuario({ usuario, onFechar, navigate }) {
       padding: '1.5rem',
       background: 'var(--surface)',
       boxShadow: '0 4px 20px rgba(46,204,113,0.12)',
+      animation: 'slideUp 0.2s ease',
     }}>
-
-      {/* Header do painel */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div className="navbar-avatar" style={{ width: 44, height: 44, fontSize: 15 }}>
@@ -142,22 +308,14 @@ function PainelUsuario({ usuario, onFechar, navigate }) {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            className="btn btn-outline"
-            style={{ padding: '6px 14px', fontSize: 13 }}
-            onClick={() => navigate('/registrar')}
-          >
+          <button className="btn btn-outline" style={{ padding: '6px 14px', fontSize: 13 }}
+            onClick={() => navigate('/registrar')}>
             + Registrar métrica
           </button>
-          <button
-            onClick={onFechar}
-            style={{
-              background: 'transparent', border: 'none', cursor: 'pointer',
-              fontSize: 20, color: 'var(--text-muted)', lineHeight: 1,
-            }}
-          >
-            ✕
-          </button>
+          <button onClick={onFechar} style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            fontSize: 20, color: 'var(--text-muted)', lineHeight: 1,
+          }}>✕</button>
         </div>
       </div>
 
@@ -165,7 +323,6 @@ function PainelUsuario({ usuario, onFechar, navigate }) {
         <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem 0' }}>Carregando...</p>
       ) : (
         <>
-          {/* Cards de métricas */}
           <div className="metrics-grid" style={{ marginBottom: '1.25rem' }}>
             {Object.entries(METRICAS_CONFIG).map(([tipo, cfg]) => {
               const m = ultimasPorTipo[tipo]
@@ -189,7 +346,6 @@ function PainelUsuario({ usuario, onFechar, navigate }) {
             })}
           </div>
 
-          {/* Alertas + Gráfico sono */}
           <div className="section-grid" style={{ marginBottom: '1.25rem' }}>
             <div className="card">
               <div className="card-title">
@@ -249,7 +405,6 @@ function PainelUsuario({ usuario, onFechar, navigate }) {
             </div>
           </div>
 
-          {/* Últimas métricas */}
           {ultimasMetricas.length > 0 && (
             <div className="card">
               <div className="card-title">Últimas métricas</div>
@@ -290,12 +445,15 @@ function PainelUsuario({ usuario, onFechar, navigate }) {
   )
 }
 
+// ─── Dashboard Principal ──────────────────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate()
-  const [usuarios, setUsuarios]           = useState([])
+  const [usuarios, setUsuarios]                   = useState([])
   const [usuarioSelecionado, setUsuarioSelecionado] = useState(null)
-  const [loading, setLoading]             = useState(true)
-  const [erro, setErro]                   = useState(null)
+  const [modalEditar, setModalEditar]             = useState(null)
+  const [modalExcluir, setModalExcluir]           = useState(null)
+  const [loading, setLoading]                     = useState(true)
+  const [erro, setErro]                           = useState(null)
 
   useEffect(() => {
     listarUsuarios()
@@ -315,72 +473,32 @@ export default function Dashboard() {
       setUsuarioSelecionado(u)
     }
   }
-  const handleExcluirUsuario = async (id) => {
-  const confirmar = window.confirm(
-    "Deseja realmente excluir este usuário?"
-  )
 
-  if (!confirmar) return
-
-  try {
-    await deletarUsuario(id)
-
-    setUsuarios(usuarios =>
-      usuarios.filter(u => u.usuarioId !== id)
-    )
-
-    if (usuarioSelecionado?.usuarioId === id) {
-      setUsuarioSelecionado(null)
-    }
-  } catch (err) {
-    alert("Erro ao excluir usuário")
-    console.error(err)
-  }
-}
-  const handleEditarUsuario = async (usuario) => {
-  const nome = prompt("Nome:", usuario.nome)
-  if (nome === null) return
-
-  const idade = prompt("Idade:", usuario.idade)
-  if (idade === null) return
-
-  const altura = prompt("Altura:", usuario.altura)
-  if (altura === null) return
-
-  const email = prompt("E-mail:", usuario.email)
-  if (email === null) return
-
-  try {
-    const atualizado = await atualizarUsuario(
-      usuario.usuarioId,
-      {
-        usuarioId: usuario.usuarioId,
-        nome,
-        idade: parseInt(idade),
-        altura: parseFloat(altura),
-        email
+  const handleExcluirConfirmado = async () => {
+    try {
+      await deletarUsuario(modalExcluir.usuarioId)
+      setUsuarios(us => us.filter(u => u.usuarioId !== modalExcluir.usuarioId))
+      if (usuarioSelecionado?.usuarioId === modalExcluir.usuarioId) {
+        setUsuarioSelecionado(null)
       }
-    )
-
-    setUsuarios(usuarios =>
-      usuarios.map(u =>
-        u.usuarioId === usuario.usuarioId
-          ? atualizado
-          : u
-      )
-    )
-
-    if (
-      usuarioSelecionado?.usuarioId === usuario.usuarioId
-    ) {
-      setUsuarioSelecionado(atualizado)
+      setModalExcluir(null)
+    } catch (err) {
+      console.error(err)
     }
-
-  } catch (err) {
-    alert("Erro ao editar usuário")
-    console.error(err)
   }
-}
+
+  const handleSalvarEdicao = async (dados) => {
+    try {
+      const atualizado = await atualizarUsuario(dados.usuarioId, dados)
+      setUsuarios(us => us.map(u => u.usuarioId === dados.usuarioId ? atualizado : u))
+      if (usuarioSelecionado?.usuarioId === dados.usuarioId) {
+        setUsuarioSelecionado(atualizado)
+      }
+      setModalEditar(null)
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   if (loading) {
     return (
@@ -400,6 +518,22 @@ export default function Dashboard() {
 
   return (
     <div className="page">
+
+      {/* Modais */}
+      {modalEditar && (
+        <ModalEditar
+          usuario={modalEditar}
+          onSalvar={handleSalvarEdicao}
+          onFechar={() => setModalEditar(null)}
+        />
+      )}
+      {modalExcluir && (
+        <ModalConfirmar
+          usuario={modalExcluir}
+          onConfirmar={handleExcluirConfirmado}
+          onFechar={() => setModalExcluir(null)}
+        />
+      )}
 
       {/* Header */}
       <div className="page-header">
@@ -444,7 +578,7 @@ export default function Dashboard() {
                     padding: '12px 16px', borderRadius: 10, cursor: 'pointer',
                     border: `1.5px solid ${selecionado ? 'var(--green)' : 'var(--border)'}`,
                     background: selecionado ? 'var(--green-light)' : 'var(--bg)',
-                    transition: 'all 0.15s',
+                    transition: 'all 0.2s ease',
                   }}
                 >
                   <div className="navbar-avatar" style={{ width: 40, height: 40, fontSize: 14, flexShrink: 0 }}>
@@ -456,44 +590,33 @@ export default function Dashboard() {
                       {u.idade} anos · {u.altura}m · {u.email}
                     </p>
                   </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleEditarUsuario(u)
-                      }}
-                      style={{
-                        border: 'none',
-                        borderRadius: 6,
-                        padding: '6px 10px',
-                        cursor: 'pointer',
-                        background: '#2563eb',
-                        color: '#fff',
-                        fontSize: 12
-                      }}
-                    >
-                      Editar
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleExcluirUsuario(u.usuarioId)
-                      }}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setModalEditar(u) }}
                     style={{
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '6px 10px',
-                    cursor: 'pointer',
-                    background: '#ef4444',
-                    color: '#fff',
-                    fontSize: 12
-                  }}
-                >
+                      border: 'none', borderRadius: 6, padding: '6px 14px',
+                      cursor: 'pointer', background: '#2563eb', color: '#fff',
+                      fontSize: 12, fontWeight: 600, transition: 'opacity 0.15s',
+                    }}
+                    onMouseOver={e => e.target.style.opacity = '0.85'}
+                    onMouseOut={e => e.target.style.opacity = '1'}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setModalExcluir(u) }}
+                    style={{
+                      border: 'none', borderRadius: 6, padding: '6px 14px',
+                      cursor: 'pointer', background: '#ef4444', color: '#fff',
+                      fontSize: 12, fontWeight: 600, transition: 'opacity 0.15s',
+                    }}
+                    onMouseOver={e => e.target.style.opacity = '0.85'}
+                    onMouseOut={e => e.target.style.opacity = '1'}
+                  >
                     Excluir
-                    </button>
-
+                  </button>
                   <span style={{
                     fontSize: 12, color: selecionado ? 'var(--green-dark)' : 'var(--text-muted)',
-                    fontWeight: 500,
+                    fontWeight: 500, minWidth: 80, textAlign: 'right',
                   }}>
                     {selecionado ? '▲ Fechar' : '▼ Ver índices'}
                   </span>
