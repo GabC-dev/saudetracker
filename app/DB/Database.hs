@@ -4,22 +4,11 @@ module DB.Database where
 import Database.PostgreSQL.Simple
 import Api.Model
 
--- Conecta ao banco de dados GABRIEL 
-{-- :: IO Connection
+conectar :: IO Connection
 conectar = connect defaultConnectInfo
   { connectDatabase = "saudetracker"
   , connectUser     = "gabriel_correa"
   , connectPassword = ""
-  , connectHost     = "localhost"
-  }
-  --}
-
--- Conecta ao banco de dados GRAZI
-conectar :: IO Connection
-conectar = connect defaultConnectInfo
-  { connectDatabase = "saudetracker"
-  , connectUser     = "postgres"
-  , connectPassword = "1234"
   , connectHost     = "localhost"
   }
 
@@ -56,10 +45,9 @@ atualizarUsuario conn uid u = do
 
 deletarUsuario :: Connection -> Int -> IO ()
 deletarUsuario conn uid = do
-  _ <- execute conn
-    "DELETE FROM usuarios WHERE id = ?"
-    (Only uid)
-
+  _ <- execute conn "DELETE FROM alertas WHERE usuario_id = ?" (Only uid)
+  _ <- execute conn "DELETE FROM metricas WHERE usuario_id = ?" (Only uid)
+  _ <- execute conn "DELETE FROM usuarios WHERE id = ?" (Only uid)
   return ()
 
 
@@ -75,7 +63,7 @@ inserirMetrica conn m = do
 listarMetricasDoUsuario :: Connection -> Int -> IO [Metrica]
 listarMetricasDoUsuario conn uid = do
   rows <- query conn
-    "SELECT id, usuario_id, tipo, valor1, valor2, registrado_em FROM metricas WHERE usuario_id = ?"
+    "SELECT id, usuario_id, tipo, valor1, valor2, registrado_em::timestamptz FROM metricas WHERE usuario_id = ?"
     (Only uid)
   return $ map (\(i, u, t, v1, v2, r) -> Metrica i u t v1 v2 r) rows
 
