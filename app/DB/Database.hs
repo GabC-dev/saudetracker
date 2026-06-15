@@ -3,14 +3,22 @@ module DB.Database where
 
 import Database.PostgreSQL.Simple
 import Api.Model
+import System.Environment (lookupEnv)
+import Data.Maybe (fromMaybe)
 
+-- Conecta ao banco de dados via variáveis de ambiente
 conectar :: IO Connection
-conectar = connect defaultConnectInfo
-  { connectDatabase = "saudetracker"
-  , connectUser     = "gabriel_correa"
-  , connectPassword = ""
-  , connectHost     = "localhost"
-  }
+conectar = do
+  dbHost <- fromMaybe "localhost"    <$> lookupEnv "DB_HOST"
+  dbName <- fromMaybe "saudetracker" <$> lookupEnv "DB_NAME"
+  dbUser <- fromMaybe "gabriel_correa" <$> lookupEnv "DB_USER"
+  dbPass <- fromMaybe ""             <$> lookupEnv "DB_PASSWORD"
+  connect defaultConnectInfo
+    { connectHost     = dbHost
+    , connectDatabase = dbName
+    , connectUser     = dbUser
+    , connectPassword = dbPass
+    }
 
 -- USUARIOS
 
