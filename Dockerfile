@@ -1,5 +1,11 @@
 FROM haskell:9.6.7
 
+# Instala dependências do PostgreSQL
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    postgresql-client \
+    && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # Copia os arquivos de configuração
