@@ -18,10 +18,10 @@ classificarIMC imc
 -- Pressão arterial (valor1 = sistólica, valor2 = diastólica)
 classificarPressao :: Double -> Double -> String
 classificarPressao sistolica diastolica
-  | sistolica < 120 && diastolica < 80  = "Normal"
-  | sistolica < 130 && diastolica < 80  = "Elevada"
-  | sistolica < 140 || diastolica < 90  = "Hipertensao grau 1"
-  | otherwise                           = "Hipertensao grau 2"
+  | sistolica >= 140 || diastolica >= 90 = "Hipertensao grau 2"
+  | sistolica >= 130 || diastolica >= 80 = "Hipertensao grau 1"
+  | sistolica >= 120 && diastolica < 80 = "Elevada"
+  | otherwise = "Normal"
 
 -- Sono (horas)
 classificarSono :: Double -> String
