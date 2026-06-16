@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libncurses-dev \
     libpq-dev \
     postgresql-client \
+    zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Instala GHCup
