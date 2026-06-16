@@ -102,9 +102,9 @@
   corsPolicy :: Middleware
   corsPolicy = cors $ const $ Just simpleCorsResourcePolicy
     { corsMethods        = map pack ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-    , corsRequestHeaders = [fromString "Content-Type"]
-    , corsOrigins        = Nothing
-    }
+  , corsRequestHeaders = [fromString "Content-Type", fromString "Authorization"]
+  , corsOrigins        = Just ([pack "https://saudetracker-front.onrender.com"], True)
+  }
 
 
   -- Sobe o servidor na porta 8080
